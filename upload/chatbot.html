@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot LinkMágico</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            height: 600px; /* Altura fixa para o chat */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+        .product-info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .product-info strong {
+            color: #333;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .message.user {
+            background-color: #e3f2fd; /* Light blue */
+            align-self: flex-end;
+            text-align: right;
+        }
+        .message.bot {
+            background-color: #f1f1f1; /* Light gray */
+            align-self: flex-start;
+            text-align: left;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+        .chat-input button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <span id="robotNameDisplay"></span>
+        </div>
+        <div class="product-info">
+            <strong id="productTitleDisplay"></strong><br>
+            <span id="productPriceDisplay"></span>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="userMessage" placeholder="Digite sua pergunta...">
+            <button id="sendMessage">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const salesUrl = urlParams.get("url");
+        const robotName = urlParams.get("robot") || "@atendimento";
+        const customInstructions = urlParams.get("instructions") || "";
+
+        document.getElementById("robotNameDisplay").textContent = robotName;
+
+        let extractedPageData = null;
+        let sessionId = localStorage.getItem("chatbotSessionId");
+        if (!sessionId) {
+            sessionId = "session_" + Date.now() + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem("chatbotSessionId", sessionId);
+        }
+
+        async function loadPageData() {
+            try {
+                const response = await fetch("/api/extract", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ url: salesUrl })
+                });
+                const data = await response.json();
+                if (data.data) {
+                    extractedPageData = data.data;
+                    document.getElementById("productTitleDisplay").textContent = extractedPageData.titulo || extractedPageData.title || 'Produto';
+                    document.getElementById("productPriceDisplay").textContent = extractedPageData.preco || extractedPageData.price || 'Consulte o preço';
+
+                    addMessage("bot", `Olá! Sou ${robotName}, seu assistente especializado em "${extractedPageData.titulo || extractedPageData.title || 'nosso produto'}".\n\nComo posso te ajudar hoje? Posso responder sobre:\n• Preços e formas de pagamento\n• Benefícios e características\n• Depoimentos de clientes\n• Processo de compra`);
+                } else if (data.error) {
+                    addMessage("bot", "Erro ao carregar dados da página: " + data.error);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados da página:", error);
+                addMessage("bot", "Desculpe, não consegui carregar as informações do produto. Por favor, tente novamente mais tarde.");
+            }
+        }
+
+        function addMessage(sender, text) {
+            const chatMessages = document.getElementById("chatMessages");
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", sender);
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Rolar para o final
+        }
+
+        document.getElementById("sendMessage").addEventListener("click", sendMessage);
+        document.getElementById("userMessage").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const userMessageInput = document.getElementById("userMessage");
+            const userMessage = userMessageInput.value.trim();
+
+            if (userMessage === "") return;
+
+            addMessage("user", userMessage);
+            userMessageInput.value = "";
+
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        user_question: userMessage,
+                        structured_data: extractedPageData,
+                        session_id: sessionId,
+                        instructions: customInstructions
+                    })
+                });
+
+                const data = await response.json();
+                if (data.response) {
+                    addMessage("bot", data.response);
+                } else if (data.error) {
+                    addMessage("bot", "Erro: " + data.error);
+                }
+            } catch (error) {
+                console.error("Erro ao enviar mensagem para o chatbot:", error);
+                addMessage("bot", "Desculpe, houve um erro ao processar sua solicitação. Por favor, tente novamente.");
+            }
+        }
+
+        loadPageData();
+    </script>
+</body>
+</html>
+
+
