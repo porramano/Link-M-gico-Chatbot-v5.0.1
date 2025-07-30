@@ -1,0 +1,1 @@
+web: pip install https://github.com/explosion/spacy-models/releases/download/pt_core_news_sm-3.6.0/pt_core_news_sm-3.6.0-py3-none-any.whl && gunicorn api_server:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120

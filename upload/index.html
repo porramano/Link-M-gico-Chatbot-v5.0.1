@@ -321,17 +321,11 @@
             document.getElementById('result').style.display = 'none';
             
             try {
-                // CORREÇÃO: Mudança para /api/extract (rota correta)
-                const extractResponse = await fetch(`/api/extract`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ url: salesUrl })
-                });
+                // CORREÇÃO: Mudança para /extract (não /api/extract)
+                const extractResponse = await fetch(`/extract?url=${encodeURIComponent(salesUrl)}`);
                 const extractData = await extractResponse.json();
                 
-                extractedPageData = extractData.data;
+                extractedPageData = extractData;
                 
                 // Gerar URL do chatbot
                 const chatbotParams = new URLSearchParams({
@@ -349,11 +343,11 @@
                 // Mostrar dados extraídos
                 const extractedDataDiv = document.getElementById('extractedData');
                 extractedDataDiv.innerHTML = `
-                    <p><strong>Título:</strong> ${extractedPageData.titulo || extractedPageData.title || 'N/A'}</p>
-                    <p><strong>Descrição:</strong> ${extractedPageData.descricao || extractedPageData.description || 'N/A'}</p>
-                    <p><strong>Preço:</strong> ${extractedPageData.preco || extractedPageData.price || 'N/A'}</p>
-                    <p><strong>Benefícios:</strong> ${(extractedPageData.beneficios || extractedPageData.benefits || []).join(', ') || 'N/A'}</p>
-                    <p><strong>CTA:</strong> ${extractedPageData.cta || 'N/A'}</p>
+                    <p><strong>Título:</strong> ${extractedPageData.title}</p>
+                    <p><strong>Descrição:</strong> ${extractedPageData.description}</p>
+                    <p><strong>Preço:</strong> ${extractedPageData.price}</p>
+                    <p><strong>Benefícios:</strong> ${extractedPageData.benefits.join(', ')}</p>
+                    <p><strong>CTA:</strong> ${extractedPageData.cta}</p>
                 `;
                 
                 document.getElementById('loading').style.display = 'none';
@@ -436,115 +430,59 @@
             const robotName = document.getElementById('robotName').value || 'Assistente Virtual';
             const customInstructions = document.getElementById('customInstructions').value;
             
-            const prompt = `Você é ${robotName}, um assistente de vendas especializado e altamente persuasivo.\n\nINFORMAÇÕES DO PRODUTO:\n- Título: ${extractedPageData.titulo || extractedPageData.title || 'N/A'}\n- Descrição: ${extractedPageData.descricao || extractedPageData.description || 'N/A'}\n- Preço: ${extractedPageData.preco || extractedPageData.price || 'N/A'}\n- Benefícios: ${(extractedPageData.beneficios || extractedPageData.benefits || []).join(', ') || 'N/A'}\n- Call to Action: ${extractedPageData.cta || 'N/A'}\n\nINSTRUÇÕES PERSONALIZADAS:\n${customInstructions || 'Seja sempre prestativo, entusiasmado e focado em converter o visitante em cliente.'}\n\nMISSÃO:\nSua missão é interagir com os clientes de forma natural, respondendo às perguntas sobre o produto com base nas informações fornecidas. Se a pergunta for fora do contexto do produto, você deve gentilmente redirecionar a conversa para os benefícios do produto, sempre com o objetivo de venda.\n\nEXEMPLO DE INTERAÇÃO:\nCliente: 'Qual o prazo de entrega?'\nVocê: 'Para informações sobre o prazo de entrega, por favor, consulte a página de vendas. Enquanto isso, posso te falar sobre os incríveis benefícios do nosso produto, como ${(extractedPageData.beneficios || extractedPageData.benefits || ['benefício 1', 'benefício 2'])[0]} e ${(extractedPageData.beneficios || extractedPageData.benefits || ['benefício 1', 'benefício 2'])[1]}!'\n\nLembre-se: O objetivo final é a venda.`;
-            
-            alert('Prompt Gerado:\n\n' + prompt);
+            const prompt = `Você é ${robotName}, um assistente de vendas especializado e altamente persuasivo.
+
+INFORMAÇÕES DO PRODUTO:
+- Título: ${extractedPageData.title}
+- Descrição: ${extractedPageData.description}
+- Preço: ${extractedPageData.price}
+- Benefícios: ${extractedPageData.benefits.join(', ')}
+- Call to Action: ${extractedPageData.cta}
+
+INSTRUÇÕES PERSONALIZADAS:
+${customInstructions || 'Seja sempre prestativo, entusiasmado e focado em converter o visitante em cliente.'}
+
+MISSÃO:
+Sua missão é ajudar visitantes interessados, responder dúvidas sobre o produto, destacar os benefícios de forma persuasiva e conduzir naturalmente para a compra. Use as informações reais do produto para criar respostas personalizadas e convincentes.
+
+ESTILO DE COMUNICAÇÃO:
+- Seja amigável e profissional
+- Use as informações específicas do produto
+- Crie urgência quando apropriado
+- Foque nos benefícios e resultados
+- Conduza para a ação de compra`;
+
+            navigator.clipboard.writeText(prompt).then(() => {
+                alert('Prompt copiado para a área de transferência! Cole no ChatGPT ou outra IA.');
+            }).catch(() => {
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.8); z-index: 1000; display: flex;
+                    align-items: center; justify-content: center; padding: 20px;
+                `;
+                
+                const content = document.createElement('div');
+                content.style.cssText = `
+                    background: white; padding: 20px; border-radius: 10px;
+                    max-width: 600px; max-height: 80%; overflow-y: auto;
+                `;
+                
+                content.innerHTML = `
+                    <h3>Prompt Gerado</h3>
+                    <textarea style="width: 100%; height: 300px; margin: 10px 0;">${prompt}</textarea>
+                    <button onclick="this.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Fechar</button>
+                `;
+                
+                modal.appendChild(content);
+                document.body.appendChild(modal);
+            });
         }
-
-        // Estilos para o chatbot.html (se necessário, podem ser movidos para um arquivo CSS separado)
-        const chatbotStyle = `
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                margin: 0;
-                padding: 20px;
-                box-sizing: border-box;
-            }
-            .chat-container {
-                background: white;
-                border-radius: 20px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-                width: 100%;
-                max-width: 400px;
-                height: 600px; /* Altura fixa para o chat */
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            }
-            .chat-header {
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white;
-                padding: 15px;
-                text-align: center;
-                font-size: 1.2rem;
-                font-weight: bold;
-                border-top-left-radius: 20px;
-                border-top-right-radius: 20px;
-            }
-            .chat-messages {
-                flex-grow: 1;
-                padding: 20px;
-                overflow-y: auto;
-                display: flex;
-                flex-direction: column;
-            }
-            .message {
-                margin-bottom: 10px;
-                padding: 10px 15px;
-                border-radius: 15px;
-                max-width: 80%;
-                word-wrap: break-word;
-            }
-            .message.user {
-                background-color: #e3f2fd; /* Light blue */
-                align-self: flex-end;
-                text-align: right;
-            }
-            .message.bot {
-                background-color: #f1f1f1; /* Light gray */
-                align-self: flex-start;
-                text-align: left;
-            }
-            .chat-input {
-                display: flex;
-                padding: 15px;
-                border-top: 1px solid #eee;
-            }
-            .chat-input input {
-                flex-grow: 1;
-                padding: 10px 15px;
-                border: 1px solid #ddd;
-                border-radius: 20px;
-                margin-right: 10px;
-                font-size: 1rem;
-            }
-            .chat-input button {
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white;
-                border: none;
-                padding: 10px 15px;
-                border-radius: 20px;
-                cursor: pointer;
-                font-size: 1rem;
-                font-weight: bold;
-            }
-            .product-info {
-                background-color: #f8f9fa;
-                padding: 10px;
-                border-radius: 10px;
-                margin-bottom: 15px;
-                font-size: 0.9em;
-                color: #555;
-            }
-            .product-info strong {
-                color: #333;
-            }
-        `;
-
-        // Injetar estilos no chatbot.html se ele for carregado
-        window.addEventListener('DOMContentLoaded', (event) => {
-            if (window.location.pathname.includes('/chatbot')) {
-                const styleElement = document.createElement('style');
-                styleElement.textContent = chatbotStyle;
-                document.head.appendChild(styleElement);
-            }
-        });
+        
+        function showAnalytics() {
+            alert('Funcionalidade de Analytics em desenvolvimento. Em breve você poderá acompanhar as conversas e métricas do seu chatbot!');
+        }
     </script>
 </body>
 </html>
-
 
