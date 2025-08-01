@@ -430,18 +430,49 @@
             const robotName = document.getElementById('robotName').value || 'Assistente Virtual';
             const customInstructions = document.getElementById('customInstructions').value;
             
-            const prompt = `Você é ${robotName}, um assistente de vendas especializado e altamente persuasivo.\n\nINFORMAÇÕES DO PRODUTO:\n- Título: ${extractedPageData.title}\n- Descrição: ${extractedPageData.description}\n- Preço: ${extractedPageData.price}\n- Benefícios: ${extractedPageData.benefits.join(', ')}\n- Call to Action: ${extractedPageData.cta}\n\nINSTRUÇÕES PERSONALIZADAS:\n${customInstructions || 'Seja sempre prestativo, entusiasmado e focado em converter o visitante em cliente.'}\n\nMISSÃO:\nSua missão é ajudar visitantes interessados, responder dúvidas sobre o produto, destacar os benefícios de forma persuasiva e conduzir naturalmente para a compra. Use as informações reais do produto para criar respostas personalizadas e convincentes.\n\nESTILO DE COMUNICAÇÃO:\n- Seja amigável e profissional\n- Use as informações específicas do produto\n- Crie urgência quando apropriado\n- Foque nos benefícios e resultados\n- Conduza para a ação de compra`;
+            const prompt = `Você é ${robotName}, um assistente de vendas especializado e altamente persuasivo.
+
+INFORMAÇÕES DO PRODUTO:
+- Título: ${extractedPageData.title}
+- Descrição: ${extractedPageData.description}
+- Preço: ${extractedPageData.price}
+- Benefícios: ${extractedPageData.benefits.join(', ')}
+- Call to Action: ${extractedPageData.cta}
+
+INSTRUÇÕES PERSONALIZADAS:
+${customInstructions || 'Seja sempre prestativo, entusiasmado e focado em converter o visitante em cliente.'}
+
+MISSÃO:
+Sua missão é ajudar visitantes interessados, responder dúvidas sobre o produto, destacar os benefícios de forma persuasiva e conduzir naturalmente para a compra. Use as informações reais do produto para criar respostas personalizadas e convincentes.
+
+ESTILO DE COMUNICAÇÃO:
+- Seja amigável e profissional
+- Use as informações específicas do produto
+- Crie urgência quando apropriado
+- Foque nos benefícios e resultados
+- Conduza para a ação de compra`;
 
             navigator.clipboard.writeText(prompt).then(() => {
                 alert('Prompt copiado para a área de transferência! Cole no ChatGPT ou outra IA.');
             }).catch(() => {
                 const modal = document.createElement('div');
-                modal.style.cssText = `\n                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;\n                    background: rgba(0,0,0,0.8); z-index: 1000; display: flex;\n                    align-items: center; justify-content: center; padding: 20px;\n                `;
+                modal.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.8); z-index: 1000; display: flex;
+                    align-items: center; justify-content: center; padding: 20px;
+                `;
                 
                 const content = document.createElement('div');
-                content.style.cssText = `\n                    background: white; padding: 20px; border-radius: 10px;\n                    max-width: 600px; max-height: 80%; overflow-y: auto;\n                `;
+                content.style.cssText = `
+                    background: white; padding: 20px; border-radius: 10px;
+                    max-width: 600px; max-height: 80%; overflow-y: auto;
+                `;
                 
-                content.innerHTML = `\n                    <h3>Prompt Gerado</h3>\n                    <textarea style=\"width: 100%; height: 300px; margin: 10px 0;\">${prompt}</textarea>\n                    <button onclick=\"this.parentElement.parentElement.remove()\" style=\"padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;\">Fechar</button>\n                `;
+                content.innerHTML = `
+                    <h3>Prompt Gerado</h3>
+                    <textarea style="width: 100%; height: 300px; margin: 10px 0;">${prompt}</textarea>
+                    <button onclick="this.parentElement.parentElement.remove()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Fechar</button>
+                `;
                 
                 modal.appendChild(content);
                 document.body.appendChild(modal);
@@ -454,5 +485,4 @@
     </script>
 </body>
 </html>
-
 
