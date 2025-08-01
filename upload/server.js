@@ -1245,3 +1245,53 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 module.exports = app;
+
+// Rota para o chatbot
+app.post("/chat", async (req, res) => {
+  const { message, salesUrl, robotName, instructions } = req.body;
+  logger.info(`Mensagem recebida: ${message} para URL: ${salesUrl}`);
+
+  try {
+    // Chamar a API Python para obter a resposta da IA
+    const pythonApiUrl = process.env.PYTHON_API_URL || "http://localhost:5000";
+    const aiResponse = await axios.post(`${pythonApiUrl}/chat`, {
+      message,
+      sales_url: salesUrl,
+      robot_name: robotName,
+      instructions,
+    });
+
+    res.json({ response: aiResponse.data.response });
+  } catch (error) {
+    logger.error("Erro ao se comunicar com a API Python:", error.message);
+    res.status(500).json({ response: "Desculpe, não consegui processar sua solicitação no momento." });
+  }
+});
+
+// Rota para extração de dados
+app.get("/extract", async (req, res) => {
+  const url = req.query.url;
+  if (!url) {
+    return res.status(400).json({ error: "URL é obrigatória." });
+  }
+
+  try {
+    const pythonApiUrl = process.env.PYTHON_API_URL || "http://localhost:5000";
+    const extractedData = await axios.get(`${pythonApiUrl}/extract?url=${encodeURIComponent(url)}`);
+    res.json(extractedData.data);
+  } catch (error) {
+    logger.error("Erro ao extrair dados da API Python:", error.message);
+    res.status(500).json({ error: "Erro ao extrair dados da página." });
+  }
+});
+
+// Rota para servir o chatbot
+app.get("/chatbot", (req, res) => {
+  res.sendFile(__dirname + "/chatbot.html"); // Assumindo que o chatbot está em chatbot.html
+});
+
+app.listen(PORT, () => {
+  logger.info(`Link Mágico Chatbot v5.0.1-SUPER-CORRIGIDO rodando na porta ${PORT}`);
+});
+
+
