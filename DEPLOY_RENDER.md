@@ -56,6 +56,7 @@ seu-repositorio/
 3.  **Conecte seu repositório Git** e selecione o repositório do seu projeto.
 4.  **Configurações do Serviço Python:**
     *   **Name**: `link-magico-api` (ou outro nome de sua preferência)
+    *   **Root Directory**: Deixe em branco (ou `/` se você moveu os arquivos Python para a raiz do seu repositório)
     *   **Runtime**: `Python 3`
     *   **Build Command**: `pip install -r requirements.txt && python -m spacy download pt_core_news_sm`
     *   **Start Command**: `gunicorn api_server:app --bind 0.0.0.0:$PORT`
@@ -73,7 +74,7 @@ seu-repositorio/
 2.  **Conecte seu repositório Git** e selecione o mesmo repositório do seu projeto.
 3.  **Configurações do Serviço Node.js:**
     *   **Name**: `link-magico-chatbot` (ou outro nome de sua preferência)
-    *   **Root Directory**: `upload/` (este é o diretório onde estão os arquivos do Node.js)
+    *   **Root Directory**: Deixe em branco (ou `/`)
     *   **Runtime**: `Node.js`
     *   **Build Command**: `npm install`
     *   **Start Command**: `node server.js`

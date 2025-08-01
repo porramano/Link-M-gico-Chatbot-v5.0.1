@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot IA - Assistente Inteligente para Vendas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .chatbot-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chatbot-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .chatbot-header h2 {
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+        }
+        
+        .chatbot-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        #chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message.bot {
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            margin-right: auto;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            margin-right: 10px;
+        }
+        
+        #message-input:focus {
+            border-color: #667eea;
+        }
+        
+        #send-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        #send-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 600px) {
+            .chatbot-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="chatbot-header">
+            <h2 id="chatbot-name">Assistente Virtual</h2>
+            <p id="chatbot-instructions">Assistente Inteligente para Vendas</p>
+        </div>
+        
+        <div id="chat-box">
+            <!-- Mensagens aparecerão aqui -->
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+            <button id="send-button">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        // Função para adicionar mensagem ao chat
+        function addMessage(sender, text) {
+            const chatBox = document.getElementById('chat-box');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender);
+            messageElement.textContent = text;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight; // Rolagem automática
+        }
+
+        // Enviar mensagem ao backend
+        async function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            if (message === '') return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const salesUrl = urlParams.get('url');
+            const robotName = urlParams.get('robot') || 'Assistente Virtual';
+            const instructions = urlParams.get('instructions') || 'Seja sempre prestativo, entusiasmado e focado em converter o visitante em cliente.';
+
+            addMessage('user', message);
+            messageInput.value = '';
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message, salesUrl, robotName, instructions }),
+                });
+                const data = await response.json();
+                addMessage('bot', data.response);
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                addMessage('bot', 'Desculpe, não consegui processar sua solicitação no momento.');
+            }
+        }
+
+        // Inicialização do chatbot
+        document.addEventListener('DOMContentLoaded', () => {
+            const sendButton = document.getElementById('send-button');
+            const messageInput = document.getElementById('message-input');
+            const chatbotName = document.getElementById('chatbot-name');
+            const chatbotInstructions = document.getElementById('chatbot-instructions');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const robotName = urlParams.get('robot') || 'Assistente Virtual';
+            const instructions = urlParams.get('instructions') || 'Assistente Inteligente para Vendas';
+
+            chatbotName.textContent = robotName;
+            chatbotInstructions.textContent = instructions;
+
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Mensagem de boas-vindas inicial
+            addMessage('bot', `Olá! 👋 Sou ${robotName}. Como posso te ajudar hoje?`);
+        });
+    </script>
+</body>
+</html>
+
